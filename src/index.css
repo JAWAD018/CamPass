@@ -1,0 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik+Mono+One&display=swap');
+@import "tailwindcss";
+
+@theme{
+    --font-rubik: Rubik Mono One, sans-serif;
+    --color-primary :#7C3AED ;
+    --color-second :#221E1E ; 
+    --color-bg: #F9FAFB
+}
