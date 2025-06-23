@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Logo from "./Logo";
 
 function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -6,7 +7,7 @@ function NavBar() {
   return (
     <nav>
       <div className="bg-[#F9FAFB] w-full h-14 flex justify-between px-4 md:px-24 items-center">
-        <div className="text-2xl font-bold text-[#221E1E]"><a href="/">Campass</a></div>
+        <Logo />
 
         {/* Desktop Menu */}
         <ul className="md:flex hidden font-semibold text-[#221E1E]">

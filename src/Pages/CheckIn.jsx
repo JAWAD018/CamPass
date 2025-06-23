@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { collection, getDocs, doc, getDoc, setDoc, query } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, query, deleteDoc } from 'firebase/firestore';
 import { db } from '../auth/config';
 import { getAuth } from 'firebase/auth';
 import DashboardLayout from '../layouts/DashboardLayout';
@@ -13,7 +13,6 @@ function CheckIn() {
   const [scanning, setScanning] = useState(false);
   const [cameraError, setCameraError] = useState(false);
   const [checkIns, setCheckIns] = useState([]);
-  const [stats, setStats] = useState({ checkedIn: 0, total: 0, rate: 0 });
   const [globalStats, setGlobalStats] = useState({ totalCheckins: 0, totalRegistered: 0 });
 
   const fetchGlobalStats = async () => {
@@ -82,7 +81,11 @@ function CheckIn() {
       if (checkinSnap.exists()) {
         setStatus('⚠️ Already checked in');
       } else {
-        await setDoc(checkinRef, { ...data, timestamp: new Date() });
+        await setDoc(checkinRef, {
+          ...data,
+          roll: Number(data.roll),
+          timestamp: new Date()
+        });
         setStatus('✅ Checked in');
       }
     }
@@ -109,13 +112,31 @@ function CheckIn() {
         { facingMode: 'environment' },
         { fps: 10, qrbox: 250 },
         handleScan,
-        (err) => {}
+        (err) => { }
       );
       setScanning(true);
       setCameraError(false);
     } catch (err) {
       setCameraError(true);
       setStatus('❌ Camera access denied or not available');
+    }
+  };
+
+  // ✅ Delete Function
+  const deleteCheckIn = async (stu) => {
+    try {
+      const deleteRef = doc(db, "events", stu.eventId, "checkins", String(stu.roll));
+      await deleteDoc(deleteRef);
+
+      // Update UI
+      setCheckIns(prev => prev.filter(item =>
+        item.roll !== stu.roll || item.eventId !== stu.eventId
+      ));
+
+      setStatus(`🗑️ Deleted check-in: ${stu.name}`);
+    } catch (error) {
+      console.error("Delete failed:", error);
+      setStatus("❌ Failed to delete check-in");
     }
   };
 
@@ -185,6 +206,7 @@ function CheckIn() {
                   <th className="p-2">Roll</th>
                   <th className="p-2">Branch</th>
                   <th className="p-2">Time</th>
+                  <th className="p-2">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -194,6 +216,14 @@ function CheckIn() {
                     <td className="p-2">{stu.roll}</td>
                     <td className="p-2">{stu.branch || '-'}</td>
                     <td className="p-2">{stu.timestamp?.toDate().toLocaleString()}</td>
+                    <td className="p-2">
+                      <button
+                        onClick={() => deleteCheckIn(stu)}
+                        className="text-red-600 hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
